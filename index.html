@@ -75,13 +75,19 @@
         let instructions = [];
 
         // --- Initialization ---
-        function initializeCPU() {
+        // Resets only the CPU's internal state (registers, flags)
+        function resetCPUState() {
             registers = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'H': 0, 'L': 0 };
             flags = { 'S': 0, 'Z': 1, 'AC': 0, 'P': 0, 'CY': 0 };
             programCounter = 0;
             instructions = [];
             updateUI();
             showMessage('');
+        }
+        
+        // Resets everything, including the code editor to its default state
+        function initializeSimulator() {
+            resetCPUState();
             codeEditor.value = "MVI A, 25H\nMVI B, 10H\nADD B\nMOV C, A";
         }
 
@@ -155,6 +161,9 @@
         }
 
         function getValue(operand) {
+            if (!operand) {
+                throw new Error("Missing operand");
+            }
             if (registers.hasOwnProperty(operand)) {
                 return registers[operand];
             }
@@ -215,7 +224,7 @@
         // --- Control Logic ---
         function runSimulation() {
             try {
-                initializeCPU();
+                resetCPUState(); // Resets registers, but not the code editor
                 instructions = parseCode(codeEditor.value);
                 if(instructions.length === 0) {
                     showMessage("No code to run.");
@@ -233,6 +242,7 @@
         function stepSimulation() {
             try {
                  if (programCounter === 0) {
+                    resetCPUState(); // Reset CPU state before first step
                     instructions = parseCode(codeEditor.value);
                      if(instructions.length === 0) {
                         showMessage("No code to execute.");
@@ -252,17 +262,17 @@
 
             } catch (error) {
                 showMessage(`Error: ${error.message}`, true);
-                initializeCPU();
+                resetCPUState();
             }
         }
 
         // --- Event Listeners ---
         runBtn.addEventListener('click', runSimulation);
         stepBtn.addEventListener('click', stepSimulation);
-        resetBtn.addEventListener('click', initializeCPU);
+        resetBtn.addEventListener('click', initializeSimulator);
         
         // --- Initial Load ---
-        window.onload = initializeCPU;
+        window.onload = initializeSimulator;
     </script>
 
 </body>
